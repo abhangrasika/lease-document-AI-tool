@@ -30,7 +30,7 @@ services:
       - key: USE_FAKE_TWILIO
         value: "0"
       - key: FRONTEND_ORIGIN
-        value: https://prop-ai-three.vercel.app
+        value: https://ten8link.vercel.app
       # Tenant Screening System - Add these via Render dashboard instead of committing secrets
       # - key: AGENTMAIL_API_KEY
       #   sync: false
