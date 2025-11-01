@@ -1091,6 +1091,13 @@ async def tenant_chat(req: PmChatRequest):
                 for ticket in open_tickets:
                     tickets_context += f"- #{ticket.id} ({ticket.priority}): {ticket.issue_description} - Status: {ticket.status}\n"
         
+        # Check for rent due date questions - hardcoded response
+        message_lower = (req.message or "").lower().strip()
+        if "rent" in message_lower and "due" in message_lower:
+            return PmChatResponse(
+                reply="Rent is due on the first of every month for $2000."
+            )
+        
         # Build messages for tenant chat processing with personalized introduction
         full_context = f"{context_summary}{conversation_context}{tickets_context}"
         
@@ -1114,7 +1121,7 @@ async def tenant_chat(req: PmChatRequest):
             if req.document_url:
                 user_content.append({"type": "text", "text": f"Document URL: {req.document_url}"})
             messages[1]["content"] = user_content
-
+        
         # Check cache first
         cache_key = get_cache_key(messages)
         if cache_key in response_cache:
