@@ -188,7 +188,11 @@ John Smith"""
         if is_reply:
             # Try to find existing application by email
             frontend_url = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
-            service_token = os.getenv("APPLICATION_SERVICE_TOKEN", "")
+            service_token = os.getenv("APPLICATION_SERVICE_TOKEN", "").strip()
+            
+            if not service_token:
+                print(f"⚠️ APPLICATION_SERVICE_TOKEN is not set - cannot find application by email")
+                return {"success": False, "error": "APPLICATION_SERVICE_TOKEN not configured"}
             
             try:
                 # Find application by email

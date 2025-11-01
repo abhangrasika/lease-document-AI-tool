@@ -18,7 +18,11 @@ async def _fetch_applications_from_db(
 ) -> List[Dict[str, Any]]:
     """Fetch applications from database via frontend API"""
     frontend_url = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
-    service_token = os.getenv("APPLICATION_SERVICE_TOKEN", "")
+    service_token = os.getenv("APPLICATION_SERVICE_TOKEN", "").strip()
+    
+    if not service_token:
+        print(f"⚠️ APPLICATION_SERVICE_TOKEN is not set - cannot fetch applications from database")
+        return []
     
     try:
         async with httpx.AsyncClient(timeout=30) as client:

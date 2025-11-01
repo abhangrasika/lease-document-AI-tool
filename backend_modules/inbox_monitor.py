@@ -234,68 +234,84 @@ async def process_incoming_email_data(
         import httpx
         
         frontend_url = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
-        service_token = os.getenv("APPLICATION_SERVICE_TOKEN", "")
+        service_token = os.getenv("APPLICATION_SERVICE_TOKEN", "").strip()
         
-        application_data = {
-            "userId": user_id,
-            "applicantName": contact_info["name"],
-            "applicantEmail": contact_info["email"],
-            "applicantPhone": contact_info.get("phone"),
-            "emailSubject": email_subject,
-            "emailBody": email_body,
-            "driversLicenseUrl": drivers_license_url,
-            "payStubUrls": pay_stub_urls,
-            "creditScoreUrl": credit_score_url,
-            "licenseName": extraction_result.get("license", {}).get("name"),
-            "licenseDOB": extraction_result.get("license", {}).get("dob"),
-            "licenseExpiration": extraction_result.get("license", {}).get("expiration"),
-            "licenseNumber": extraction_result.get("license", {}).get("number"),
-            "employerName": extraction_result.get("employer"),
-            "monthlyIncome": extraction_result.get("monthly_income"),
-            "annualIncome": extraction_result.get("annual_income"),
-            "payFrequency": extraction_result.get("pay_frequency"),
-            "creditScore": extraction_result.get("credit_score"),
-            "status": status,
-            "screeningScore": score,
-            "screeningNotes": notes
-        }
-        
-        agentmail_client = AgentmailClient()
-        
-        # Call frontend internal API to save application
-        try:
-            async with httpx.AsyncClient(timeout=30) as client:
-                api_url = f"{frontend_url}/api/applications/internal"
-                headers = {
-                    "Authorization": f"Bearer {service_token}",
-                    "Content-Type": "application/json"
-                }
-                response = await client.post(api_url, json=application_data, headers=headers)
-                response.raise_for_status()
-                result = response.json()
-                application_id = result.get("application", {}).get("id")
-                print(f"✅ Application saved to database: {application_id}")
-        except httpx.ConnectError as conn_error:
-            print(f"⚠️ Error saving application to database: Connection failed to {frontend_url}")
-            print(f"   Check if frontend is running and FRONTEND_ORIGIN is correct")
-            print(f"   Error details: {conn_error}")
-            # Continue with workflow even if DB save fails
+        # Validate service token before making request
+        if not service_token:
+            print(f"⚠️ APPLICATION_SERVICE_TOKEN is not set or is empty")
+            print(f"   Cannot save application to database - skipping API call")
+            print(f"   Set APPLICATION_SERVICE_TOKEN environment variable to enable database persistence")
             application_id = f"app_{datetime.now().strftime('%Y%m%d%H%M%S')}_{message_id[:8]}"
-        except httpx.TimeoutException:
-            print(f"⚠️ Error saving application to database: Timeout connecting to {frontend_url}")
-            print(f"   Frontend may be slow or unresponsive")
-            # Continue with workflow even if DB save fails
-            application_id = f"app_{datetime.now().strftime('%Y%m%d%H%M%S')}_{message_id[:8]}"
-        except httpx.HTTPStatusError as http_error:
-            print(f"⚠️ Error saving application to database: HTTP {http_error.response.status_code}")
-            print(f"   Response: {http_error.response.text[:200] if hasattr(http_error.response, 'text') else 'N/A'}")
-            # Continue with workflow even if DB save fails
-            application_id = f"app_{datetime.now().strftime('%Y%m%d%H%M%S')}_{message_id[:8]}"
-        except Exception as db_error:
-            error_type = type(db_error).__name__
-            print(f"⚠️ Error saving application to database ({error_type}): {db_error}")
-            # Continue with workflow even if DB save fails
-            application_id = f"app_{datetime.now().strftime('%Y%m%d%H%M%S')}_{message_id[:8]}"
+        else:
+            application_data = {
+                "userId": user_id,
+                "applicantName": contact_info["name"],
+                "applicantEmail": contact_info["email"],
+                "applicantPhone": contact_info.get("phone"),
+                "emailSubject": email_subject,
+                "emailBody": email_body,
+                "driversLicenseUrl": drivers_license_url,
+                "payStubUrls": pay_stub_urls,
+                "creditScoreUrl": credit_score_url,
+                "licenseName": extraction_result.get("license", {}).get("name"),
+                "licenseDOB": extraction_result.get("license", {}).get("dob"),
+                "licenseExpiration": extraction_result.get("license", {}).get("expiration"),
+                "licenseNumber": extraction_result.get("license", {}).get("number"),
+                "employerName": extraction_result.get("employer"),
+                "monthlyIncome": extraction_result.get("monthly_income"),
+                "annualIncome": extraction_result.get("annual_income"),
+                "payFrequency": extraction_result.get("pay_frequency"),
+                "creditScore": extraction_result.get("credit_score"),
+                "status": status,
+                "screeningScore": score,
+                "screeningNotes": notes
+            }
+            
+            agentmail_client = AgentmailClient()
+            
+            # Call frontend internal API to save application
+            try:
+                async with httpx.AsyncClient(timeout=30) as client:
+                    api_url = f"{frontend_url}/api/applications/internal"
+                    headers = {
+                        "Authorization": f"Bearer {service_token}",
+                        "Content-Type": "application/json"
+                    }
+                    response = await client.post(api_url, json=application_data, headers=headers)
+                    response.raise_for_status()
+                    result = response.json()
+                    application_id = result.get("application", {}).get("id")
+                    print(f"✅ Application saved to database: {application_id}")
+            except httpx.ConnectError as conn_error:
+                print(f"⚠️ Error saving application to database: Connection failed to {frontend_url}")
+                print(f"   Check if frontend is running and FRONTEND_ORIGIN is correct")
+                print(f"   Error details: {conn_error}")
+                # Continue with workflow even if DB save fails
+                application_id = f"app_{datetime.now().strftime('%Y%m%d%H%M%S')}_{message_id[:8]}"
+            except httpx.TimeoutException:
+                print(f"⚠️ Error saving application to database: Timeout connecting to {frontend_url}")
+                print(f"   Frontend may be slow or unresponsive")
+                # Continue with workflow even if DB save fails
+                application_id = f"app_{datetime.now().strftime('%Y%m%d%H%M%S')}_{message_id[:8]}"
+            except httpx.HTTPStatusError as http_error:
+                print(f"⚠️ Error saving application to database: HTTP {http_error.response.status_code}")
+                print(f"   Response: {http_error.response.text[:200] if hasattr(http_error.response, 'text') else 'N/A'}")
+                # Continue with workflow even if DB save fails
+                application_id = f"app_{datetime.now().strftime('%Y%m%d%H%M%S')}_{message_id[:8]}"
+            except httpx.RequestError as req_error:
+                # Catch httpx.LocalProtocolError and other request-level errors
+                error_type = type(req_error).__name__
+                print(f"⚠️ Error saving application to database ({error_type}): {req_error}")
+                if "Illegal header value" in str(req_error) or "Bearer" in str(req_error):
+                    print(f"   This usually means APPLICATION_SERVICE_TOKEN is empty or invalid")
+                    print(f"   Please set APPLICATION_SERVICE_TOKEN environment variable with a valid token")
+                # Continue with workflow even if DB save fails
+                application_id = f"app_{datetime.now().strftime('%Y%m%d%H%M%S')}_{message_id[:8]}"
+            except Exception as db_error:
+                error_type = type(db_error).__name__
+                print(f"⚠️ Error saving application to database ({error_type}): {db_error}")
+                # Continue with workflow even if DB save fails
+                application_id = f"app_{datetime.now().strftime('%Y%m%d%H%M%S')}_{message_id[:8]}"
         
         # application_id is now from database if saved successfully
         print(f"✅ Application processed: {status} ({score})")

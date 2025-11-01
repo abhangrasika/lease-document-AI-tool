@@ -23,7 +23,7 @@ class AgentmailClient:
     """Client for Agentmail API operations"""
     
     def __init__(self):
-        self.api_key = AGENTMAIL_API_KEY
+        self.api_key = (AGENTMAIL_API_KEY or "").strip()
         self.inbox_id = AGENTMAIL_INBOX_ID
         self.api_url = AGENTMAIL_API_URL
         
@@ -38,10 +38,18 @@ class AgentmailClient:
         # Final safety check before using
         if not self.api_url.startswith(("http://", "https://")):
             raise ValueError(f"Invalid AGENTMAIL_API_URL: {self.api_url} - must start with http:// or https://")
-        self.headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        
+        # Validate API key and create headers
+        if not self.api_key:
+            print(f"⚠️ Warning: AGENTMAIL_API_KEY is empty - API calls may fail")
+            self.headers = {
+                "Content-Type": "application/json"
+            }
+        else:
+            self.headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
     
     async def list_threads(self, inbox_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """
