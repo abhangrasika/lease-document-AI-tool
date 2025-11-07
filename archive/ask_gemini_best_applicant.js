@@ -2,8 +2,13 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-const GEMINI_API_KEY = 'AIzaSyB19XVVUEizOwjiR4OdgdQD_UPvQMHnnC4';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.LLM_API_KEY || '';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+if (!GEMINI_API_KEY) {
+  console.error('❌ GEMINI_API_KEY or LLM_API_KEY environment variable not set');
+  process.exit(1);
+}
 
 async function fetchAllApplications() {
   console.log('📊 Fetching all applications from database...\n');

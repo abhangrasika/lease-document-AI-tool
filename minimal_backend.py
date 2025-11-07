@@ -12,9 +12,9 @@ from dotenv import load_dotenv
 # ------------------ Environment & Config ------------------
 load_dotenv()
 
-API_KEY = os.getenv("LLM_API_KEY", "AIzaSyBG2RIEPLO_d37g4X9TWMRxJoG74jWO-g0")
+API_KEY = os.getenv("LLM_API_KEY", "")
 if not API_KEY:
-    raise RuntimeError("LLM_API_KEY not set.")
+    raise RuntimeError("LLM_API_KEY not set. Please set the LLM_API_KEY environment variable.")
 
 # Models - Using Gemini
 TEXT_MODEL = os.getenv("LLM_MODEL", "gemini-2.0-flash")
@@ -955,9 +955,6 @@ def cors_debug():
     """Debug CORS configuration"""
     return {
         "allowed_origins": [
-            "https://ten8link.vercel.app",
-            "https://prop-ai-three.vercel.app", 
-            "https://prop-ai.onrender.com",
             "http://localhost:3000",
             "http://127.0.0.1:3000",
             FRONTEND_ORIGIN

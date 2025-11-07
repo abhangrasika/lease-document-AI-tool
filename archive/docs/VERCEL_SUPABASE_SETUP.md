@@ -69,7 +69,7 @@ Add these additional variables for completeness:
 
 7. **NEXT_PUBLIC_SUPABASE_ANON_KEY**
    ```
-   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1cWpncnVxcmhhdmR6ZXZrZWthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5NDYyMjEsImV4cCI6MjA3NzUyMjIyMX0.2hN4kxTvlmZ5tMoqBynK0X1QqoXJwgGl4pyo--vEVho
+   YOUR_SUPABASE_JWT_SECRET_HERE
    ```
 
 8. **SUPABASE_JWT_SECRET**

@@ -12,12 +12,16 @@ import asyncio
 from typing import List, Dict, Any
 
 # Gemini API Configuration
-GEMINI_API_KEY = 'AIzaSyB19XVVUEizOwjiR4OdgdQD_UPvQMHnnC4'
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') or os.getenv('LLM_API_KEY') or ''
 GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+
+if not GEMINI_API_KEY:
+    print('❌ GEMINI_API_KEY or LLM_API_KEY environment variable not set')
+    sys.exit(1)
 
 # Frontend API Configuration
 FRONTEND_URL = os.getenv('FRONTEND_ORIGIN', 'http://localhost:3000')
-SERVICE_TOKEN = os.getenv('APPLICATION_SERVICE_TOKEN', 'your-service-token-here')  # Default token for local dev
+SERVICE_TOKEN = os.getenv('APPLICATION_SERVICE_TOKEN', '')  # Must be set via environment variable
 
 
 def format_application_for_gemini(app: Dict[str, Any], index: int) -> str:

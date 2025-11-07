@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-const SERVICE_TOKEN = process.env.APPLICATION_SERVICE_TOKEN || "your-service-token-here";
+const SERVICE_TOKEN = process.env.APPLICATION_SERVICE_TOKEN || "";
+
+if (!SERVICE_TOKEN) {
+  console.warn("⚠️ APPLICATION_SERVICE_TOKEN not set - internal API endpoints will be disabled");
+}
 
 /**
  * Internal API endpoint for creating applications from email processing
@@ -11,6 +15,13 @@ const SERVICE_TOKEN = process.env.APPLICATION_SERVICE_TOKEN || "your-service-tok
 export async function POST(request: NextRequest) {
   try {
     // Verify service token
+    if (!SERVICE_TOKEN) {
+      return NextResponse.json(
+        { error: "Service token not configured" },
+        { status: 503 }
+      );
+    }
+    
     const authHeader = request.headers.get("authorization");
     const token = authHeader?.replace("Bearer ", "");
     
@@ -121,6 +132,13 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Verify service token
+    if (!SERVICE_TOKEN) {
+      return NextResponse.json(
+        { error: "Service token not configured" },
+        { status: 503 }
+      );
+    }
+    
     const authHeader = request.headers.get("authorization");
     const token = authHeader?.replace("Bearer ", "");
     

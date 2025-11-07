@@ -2,6 +2,8 @@
 
 Our property management platform that handles tenant SMS, maintenance requests, and property management tasks using AI. Built with Next.js + FastAPI + Twilio + Gemini AI.
 
+> **⚠️ Security Note**: All API keys, secrets, and sensitive credentials have been redacted from this codebase. Set environment variables as described in the deployment guides.
+
 > **🚀 Ready to Deploy?** Start here: **[START_HERE.md](START_HERE.md)** - Complete deployment guide (~45 min)
 
 ## 🏗️ Architecture
