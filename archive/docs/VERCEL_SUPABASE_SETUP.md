@@ -74,7 +74,7 @@ Add these additional variables for completeness:
 
 8. **SUPABASE_JWT_SECRET**
    ```
-   VJDwd5iTfnw3EXLKKnSGVXP0V3mOl3+mxrvs2ruNQBstU1aFmcI55tLukWCCdaarYmRmCgWWXZM8XywHqe4lLg==
+   YOUR_SUPABASE_JWT_SECRET_HERE
    ```
 
 **For each variable**:
