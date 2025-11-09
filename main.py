@@ -1,36 +1,41 @@
 """
-Lease Document AI Tool
-Author: Rasika Abhang
-Date: 2025-11-08
-
-Purpose:
-Extract comprehensive insights from uploaded lease agreements — including rent,
-deposit, parties, property, insurance, fees, and clause details — using rule-based
-pattern recognition and text parsing.
+Note:
+This script was developed and refined through iterative debugging and pattern testing
+to handle diverse lease formats and ensure accurate text extraction.
 """
 
+"""
+Lease Document AI Tool
+Name: Rasika Abhang
+Date: 2025-11-09
+
+Purpose:
+This tool reads lease agreement PDFs and pulls out key details like rent, deposit,
+landlord and tenant names, address, insurance info, and important clauses.
+It uses simple text patterns and rules to organize the data clearly.
+"""
 from fastapi import FastAPI
 from pydantic import BaseModel
 import pdfplumber
 import os
 import re
 
+# Initialize the FastAPI app
 app = FastAPI(title="Smart Lease Info Extractor")
 
-
+# Define input schema for API request
 class LeaseFileRequest(BaseModel):
     file_path: str
 
-
 @app.post("/api/ai/process-lease")
 async def process_lease_file(request: LeaseFileRequest):
-    """Extract structured lease details from uploaded PDF."""
+    """Reads a lease PDF and extracts structured contract details."""
     pdf_path = request.file_path
 
     if not os.path.isfile(pdf_path):
         return {"error": "PDF file not found at the given path."}
 
-    # Step 1 – Read PDF content
+    # Step 1: Read PDF and extract full text
     lease_text = ""
     try:
         with pdfplumber.open(pdf_path) as pdf:
@@ -41,10 +46,10 @@ async def process_lease_file(request: LeaseFileRequest):
     except Exception as e:
         return {"error": f"Failed to read PDF: {str(e)}"}
 
-    print("\n🔍 Extracting from:", pdf_path)
+    print("\n Extracting from:", pdf_path)
     print(lease_text[:400], "\n----------------------------\n")
 
-    # Helper function for regex matching
+    # Utility: helper to match multiple regex patterns
     def match_any(patterns, text):
         for pattern in patterns:
             m = re.search(pattern, text, re.IGNORECASE)
@@ -52,7 +57,7 @@ async def process_lease_file(request: LeaseFileRequest):
                 return m.group(1)
         return None
 
-    # --- Financial Details ---
+    # Step 2: Extract financial details
     rent = match_any([
         r"base\s*rent[^$]{0,20}\$\s?([\d,]+(?:\.\d{2})?)",
         r"monthly\s*rent[^$]{0,20}\$\s?([\d,]+(?:\.\d{2})?)",
@@ -71,7 +76,7 @@ async def process_lease_file(request: LeaseFileRequest):
     if re.search(r"no pets|pets?.*not permitted", lease_text, re.IGNORECASE):
         pet_fee = "Not applicable"
 
-    # --- Dates ---
+    # Step 3: Extract lease term dates
     start_pattern = re.search(
         r"(?:begin|effective|from)\s+on\s+([A-Za-z]+\s*\d{1,2},?\s*\d{4})",
         lease_text, re.IGNORECASE
@@ -81,7 +86,7 @@ async def process_lease_file(request: LeaseFileRequest):
         lease_text, re.IGNORECASE
     )
 
-    # --- Parties (Landlord & Tenant) ---
+    # Step 4: Identify landlord and tenant names
     landlord = match_any([
         r"([A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3})\s*\(Landlord\)",
         r"Landlord[:\s-]+([A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3})"
@@ -93,7 +98,7 @@ async def process_lease_file(request: LeaseFileRequest):
     )
     tenant = tenant_block.group(1) if tenant_block else "Not found"
 
-    # --- Property Address ---
+    # Step 5: Detect property address
     address_match = re.search(
         r"for\s+(\d{3,6}\s+[A-Za-z\s]+,\s*[A-Za-z\s]+,\s*(?:TX|Texas)\s*\d{5})",
         lease_text
@@ -105,7 +110,7 @@ async def process_lease_file(request: LeaseFileRequest):
         )
     address = address_match.group(1) if address_match else "Not found"
 
-    # --- Fees and Clauses ---
+    # Step 6: Extract additional fees and legal clauses
     late_fee = match_any([
         r"late\s*fee[^$]{0,20}\$\s?([\d,]+(?:\.\d{2})?)"
     ], lease_text)
@@ -122,7 +127,7 @@ async def process_lease_file(request: LeaseFileRequest):
         re.search(r"evict|eviction|default|termination notice", lease_text, re.IGNORECASE)
     )
 
-    # --- Confidence ---
+    # Step 7: Compute extraction confidence
     confidence = sum([
         bool(rent),
         bool(deposit),
@@ -130,7 +135,7 @@ async def process_lease_file(request: LeaseFileRequest):
         bool(end_pattern)
     ]) / 4
 
-    # --- Structured Response ---
+    # Step 8: Build structured JSON output
     details = {
         "Property Address": address if address else "Not found",
         "Landlord Name": landlord if landlord else "Not found",
@@ -148,7 +153,7 @@ async def process_lease_file(request: LeaseFileRequest):
         "Lease Text Preview": lease_text[:400] + "..."
     }
 
-    # --- Clean up line breaks ---
+    # Step 9: Clean formatting (remove newlines and extra spaces)
     for k, v in details.items():
         if isinstance(v, str):
             details[k] = v.replace("\n", " ").strip()
